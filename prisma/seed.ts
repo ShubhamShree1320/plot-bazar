@@ -1,7 +1,12 @@
+import "dotenv/config";
 import { PrismaClient, Role, PlotStatus } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error("DATABASE_URL is not set");
+
+const prisma = new PrismaClient({ adapter: new PrismaPg(url) });
 
 async function main() {
   console.log("🌱 Seeding database...");
