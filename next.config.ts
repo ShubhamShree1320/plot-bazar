@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["bcryptjs", "nodemailer", "twilio"],
+  serverExternalPackages: ["bcryptjs", "nodemailer", "twilio", "pg", "@prisma/adapter-pg", "@prisma/client", "@prisma/extension-accelerate"],
 };
 
 export default nextConfig;
