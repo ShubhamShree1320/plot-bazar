@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 
 const globalForPrisma = globalThis as unknown as {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,8 +21,7 @@ function createPrismaClient() {
       .$extends(withAccelerate());
   }
 
-  const pool = new Pool({ connectionString: url });
-  const adapter = new PrismaPg({ client: pool });
+  const adapter = new PrismaPg(url);
   return new PrismaClient({ adapter, log: logLevel });
 }
 
