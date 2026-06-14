@@ -4,9 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import PlotImageWithPins from "@/components/plots/PlotImageWithPins";
 import PlotDetailClient from "./PlotDetailClient";
 import { MapPin, Ruler, Calendar, Building2 } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const MapView = dynamic(() => import("@/components/map/MapView"), { ssr: false });
+import MapViewClient from "@/components/map/MapViewClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -130,7 +128,7 @@ export default async function PlotDetailPage({ params }: PageProps) {
             <div className="bg-white rounded-2xl border border-gray-100 p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Location</h3>
               <div className="h-64 rounded-xl overflow-hidden">
-                <MapView
+                <MapViewClient
                   plots={[{
                     id: plot.id,
                     title: plot.title,
