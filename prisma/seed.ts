@@ -13,7 +13,30 @@ async function main() {
     update: {},
   });
 
-  // Create admin users
+  // ── Demo accounts (easy login in dev) ──────────────────────────────────────
+  await prisma.user.upsert({
+    where: { email: "demo.admin@plotbazaar.in" },
+    create: {
+      name: "Demo Admin",
+      email: "demo.admin@plotbazaar.in",
+      role: Role.ADMIN,
+      isVerified: true,
+    },
+    update: {},
+  });
+
+  await prisma.user.upsert({
+    where: { email: "demo.buyer@plotbazaar.in" },
+    create: {
+      name: "Demo Buyer",
+      email: "demo.buyer@plotbazaar.in",
+      role: Role.USER,
+      isVerified: true,
+    },
+    update: {},
+  });
+
+  // ── Seeded admin users ──────────────────────────────────────────────────────
   const admin1 = await prisma.user.upsert({
     where: { email: "admin@plotbazaar.in" },
     create: {

@@ -11,6 +11,7 @@ function VerifyForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resending, setResending] = useState(false);
+  const [devOtp, setDevOtp] = useState("");
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -52,6 +53,7 @@ function VerifyForm() {
         body: JSON.stringify({ identifier }),
       });
       const data = await res.json();
+      if (data.success && data.data?.devOtp) setDevOtp(data.data.devOtp);
       if (!data.success) setError(data.error || "Failed to resend OTP");
     } finally {
       setResending(false);
@@ -65,6 +67,13 @@ function VerifyForm() {
         We sent a 6-digit OTP to
       </p>
       <p className="font-semibold text-blue-600 text-sm mb-8">{identifier}</p>
+
+      {devOtp && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-center">
+          <p className="text-xs text-amber-600 font-medium mb-1">Dev Mode OTP</p>
+          <p className="text-2xl font-bold tracking-widest text-amber-700">{devOtp}</p>
+        </div>
+      )}
 
       <div className="mb-6">
         <OTPInput onComplete={handleOTPComplete} disabled={loading} />

@@ -1,16 +1,27 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.resend.com",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER || "resend",
-    pass: process.env.RESEND_API_KEY || process.env.SMTP_PASS,
-  },
-});
+const EMAIL_CONFIGURED = !!(
+  (process.env.RESEND_API_KEY || process.env.SMTP_PASS) &&
+  process.env.SMTP_HOST
+);
+
+const transporter = EMAIL_CONFIGURED
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST!,
+      port: parseInt(process.env.SMTP_PORT || "465"),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER || "resend",
+        pass: process.env.RESEND_API_KEY || process.env.SMTP_PASS,
+      },
+    })
+  : null;
 
 export async function sendOTPEmail(email: string, otp: string, name: string): Promise<void> {
+  if (!transporter) {
+    console.log(`\n📧 [DEV] OTP for ${email}: \x1b[1;33m${otp}\x1b[0m\n`);
+    return;
+  }
   await transporter.sendMail({
     from: `"PlotBazaar" <${process.env.FROM_EMAIL || "noreply@plotbazaar.in"}>`,
     to: email,
@@ -46,6 +57,11 @@ export async function sendFeedbackEmail(
 ): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const feedbackUrl = `${baseUrl}/feedback/${feedbackToken}`;
+
+  if (!transporter) {
+    console.log(`\n📧 [DEV] Feedback link for ${sellerEmail}: ${feedbackUrl}\n`);
+    return;
+  }
 
   await transporter.sendMail({
     from: `"PlotBazaar" <${process.env.FROM_EMAIL || "noreply@plotbazaar.in"}>`,

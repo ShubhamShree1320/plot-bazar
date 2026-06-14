@@ -42,7 +42,11 @@ export async function POST(req: NextRequest) {
       await sendOTPSMS(user.phone, otp);
     }
 
-    return successResponse({ identifier, message: "OTP sent successfully" });
+    return successResponse({
+      identifier,
+      message: "OTP sent successfully",
+      ...(process.env.NODE_ENV === "development" && { devOtp: otp }),
+    });
   } catch (err) {
     console.error("Login error:", err);
     return serverErrorResponse();
