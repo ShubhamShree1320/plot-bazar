@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PlotStatus {
+  PENDING
+  ACTIVE
+  SOLD
+  DELETED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum BlockAction {
+  BLOCKED
+  UNBLOCKED
+}
+
+enum FeedbackStatus {
+  PENDING
+  SUBMITTED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String
+  email             String?   @unique
+  phone             String?   @unique
+  passwordHash      String?
+  role              Role      @default(USER)
+  isBlocked         Boolean   @default(false)
+  isVerified        Boolean   @default(false)
+  freeListingsUsed  Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  plots             Plot[]
+  tokenPayments     TokenPayment[]
+  listingPayments   ListingPayment[]
+  feedbacksAsBuyer  Feedback[]       @relation("BuyerFeedback")
+  feedbacksAsSeller Feedback[]       @relation("SellerFeedback")
+  blockLogs         BlockLog[]       @relation("BlockedUser")
+  adminBlockLogs    BlockLog[]       @relation("AdminBlockLogs")
+}
+
+model OTP {
+  id          String    @id @default(cuid())
+  identifier  String
+  code        String
+  expiresAt   DateTime
+  isUsed      Boolean   @default(false)
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([identifier])
+}
+
+model Plot {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  price       Float
+  area        Float
+  areaUnit    String     @default("sqft")
+  state       String
+  city        String
+  locality    String?
+  pincode     String?
+  latitude    Float?
+  longitude   Float?
+  status      PlotStatus @default(PENDING)
+  tokenAmount Float?
+  sellerId    String
+  seller      User       @relation(fields: [sellerId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  images          PlotImage[]
+  tokenPayments   TokenPayment[]
+  listingPayments ListingPayment[]
+  feedbacks       Feedback[]
+
+  @@index([state, city])
+  @@index([status])
+  @@index([sellerId])
+}
+
+model PlotImage {
+  id          String   @id @default(cuid())
+  plotId      String
+  plot        Plot     @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  imageName   String
+  imageUrl    String
+  coordinates Json?
+  isPrimary   Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([plotId])
+}
+
+model TokenPayment {
+  id                String        @id @default(cuid())
+  buyerId           String
+  buyer             User          @relation(fields: [buyerId], references: [id])
+  plotId            String
+  plot              Plot          @relation(fields: [plotId], references: [id])
+  amount            Float
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+
+  feedback Feedback?
+
+  @@unique([buyerId, plotId])
+  @@index([buyerId])
+  @@index([plotId])
+}
+
+model ListingPayment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  amount            Float
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  status            PaymentStatus @default(PENDING)
+  plotId            String?
+  plot              Plot?         @relation(fields: [plotId], references: [id])
+  createdAt         DateTime      @default(now())
+
+  @@index([userId])
+}
+
+model Feedback {
+  id             String         @id @default(cuid())
+  plotId         String
+  plot           Plot           @relation(fields: [plotId], references: [id])
+  buyerId        String
+  buyer          User           @relation("BuyerFeedback", fields: [buyerId], references: [id])
+  sellerId       String
+  seller         User           @relation("SellerFeedback", fields: [sellerId], references: [id])
+  tokenPaymentId String         @unique
+  tokenPayment   TokenPayment   @relation(fields: [tokenPaymentId], references: [id])
+  isGenuine      Boolean?
+  comment        String?
+  status         FeedbackStatus @default(PENDING)
+  feedbackToken  String?        @unique
+  sentAt         DateTime       @default(now())
+  submittedAt    DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model BlockLog {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation("BlockedUser", fields: [userId], references: [id])
+  adminId   String
+  admin     User        @relation("AdminBlockLogs", fields: [adminId], references: [id])
+  action    BlockAction
+  reason    String?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+}
+
+model Settings {
+  id                 String   @id @default("global")
+  freeListingLimit   Int      @default(3)
+  listingFeeAmount   Float    @default(200)
+  otpExpiryMinutes   Int      @default(10)
+  feedbackDelayHours Int      @default(48)
+  updatedAt          DateTime @updatedAt
+}

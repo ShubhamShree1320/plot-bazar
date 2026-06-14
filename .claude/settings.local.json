@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"C:\\\\Users\\\\shubham.a.shree\\\\OneDrive - Accenture\\\\Desktop\\\\real-state\"; Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch 'node_modules|\\\\.next|\\\\.git' } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\($pwd.Path + '\\\\', ''\\) } | Sort-Object | Select-Object -First 80)",
+      "PowerShell(docker --version 2>&1)"
+    ]
+  }
+}
