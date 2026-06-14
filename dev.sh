@@ -7,17 +7,27 @@ warn()  { echo -e "${YELLOW}[dev]${NC} $*"; }
 error() { echo -e "${RED}[dev]${NC} $*"; exit 1; }
 
 # ── 0. Validate .env ─────────────────────────────────────────────────────────
-[ -f ".env" ] || error ".env file not found. Create one — see .env.example."
+if [ ! -f ".env" ]; then
+  if [ -f ".env.example" ]; then
+    cp .env.example .env
+    warn ".env not found — copied from .env.example."
+  else
+    touch .env
+    warn ".env not found — created empty .env."
+  fi
+fi
 
 DB_URL=$(grep -E '^DATABASE_URL=' .env | head -1 | sed 's/DATABASE_URL=//;s/^"//;s/"$//')
 
-[ -z "$DB_URL" ] && error "DATABASE_URL is not set in .env"
-
-if echo "$DB_URL" | grep -q "^prisma+postgres://"; then
-  error "DATABASE_URL is still the prisma+postgres:// format.\nUpdate .env with a standard PostgreSQL URL:\n  DATABASE_URL=\"postgresql://plotbazaar:plotbazaar@localhost:5432/plotbazaar\""
+if [ -z "$DB_URL" ] || echo "$DB_URL" | grep -q "^prisma+postgres://"; then
+  warn "DATABASE_URL missing or using prisma+postgres:// — setting Docker default..."
+  # Remove old DATABASE_URL lines and write the correct one
+  grep -v '^DATABASE_URL=' .env > .env.tmp && mv .env.tmp .env
+  echo 'DATABASE_URL="postgresql://plotbazaar:plotbazaar@localhost:5432/plotbazaar"' >> .env
+  DB_URL="postgresql://plotbazaar:plotbazaar@localhost:5432/plotbazaar"
 fi
 
-info "DATABASE_URL looks good."
+info "DATABASE_URL: $DB_URL"
 
 # ── 1. Dependencies ───────────────────────────────────────────────────────────
 if [ ! -d "node_modules" ]; then
