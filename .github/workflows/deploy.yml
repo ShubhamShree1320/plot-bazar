@@ -1,0 +1,47 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: 54.198.195.135
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
+          port: 22
+          source: ".,!.git,!.venv,!__pycache__,!*.pyc"
+          target: /home/ubuntu/plot-bazar
+
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: 54.208.40.170
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/plot-bazar
+            # Stop any existing Next.js dev server
+            pkill -f "next dev" 2>/dev/null || true
+            # Stop existing Docker containers
+            docker compose down 2>/dev/null || true
+            # Ensure dev.sh is executable
+            chmod +x dev.sh
+            # Start dev.sh in background (it blocks on npm run dev)
+            nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 &
+            echo "Dev server starting with PID $!"
+            # Give it a few seconds to initialise
+            sleep 8
+            echo "--- Recent logs ---"
+            tail -30 /home/ubuntu/plot-bazar/dev.log
+            echo "Deployed successfully at $(date)"
