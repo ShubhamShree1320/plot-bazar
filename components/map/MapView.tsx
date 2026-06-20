@@ -34,11 +34,13 @@ export default function MapView({ plots, center, zoom = 10, onPlotHover, onPlotC
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current || leafletRef.current) return;
 
-    // Dynamic import of leaflet to avoid SSR issues
+    let cancelled = false;
+
     import("leaflet").then((L) => {
+      if (cancelled || !mapRef.current || leafletRef.current) return;
+
       import("leaflet/dist/leaflet.css");
 
-      // Fix default icon path
       const iconDefault = L.Icon.Default.prototype as unknown as Record<string, unknown>;
       delete iconDefault._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -56,9 +58,15 @@ export default function MapView({ plots, center, zoom = 10, onPlotHover, onPlotC
 
       leafletRef.current = { map, markers: [] as unknown[] };
       setMapLoaded(true);
-
-      return () => { map.remove(); leafletRef.current = null; };
     });
+
+    return () => {
+      cancelled = true;
+      if (leafletRef.current) {
+        leafletRef.current.map.remove();
+        leafletRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -113,7 +121,7 @@ export default function MapView({ plots, center, zoom = 10, onPlotHover, onPlotC
         leafletRef.current.markers.push(marker);
       });
     });
-  }, [plots, mapLoaded, hoveredId, selectedId, onPlotHover, onPlotClick]);
+  }, [plots, mapLoaded, hoveredId, selectedId]);
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden">
