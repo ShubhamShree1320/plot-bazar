@@ -1,6 +1,4 @@
-import dynamic from "next/dynamic";
-
-const ExploreMapClient = dynamic(() => import("./ExploreMapClient"), { ssr: false });
+import ExploreMapClient from "./ExploreMapClient";
 
 export const metadata = {
   title: "Explore Map – PlotBazaar",
