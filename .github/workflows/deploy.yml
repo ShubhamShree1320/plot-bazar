@@ -35,8 +35,32 @@ jobs:
           command_timeout: 10m
           script: |
             cd /home/ubuntu/plot-bazar
-            pkill -f "next dev" 2>/dev/null || true
+
+            # Install PM2 if not present
+            command -v pm2 || sudo npm install -g pm2
+
+            # Restart postgres
             timeout 30 docker compose down 2>/dev/null || true
-            chmod +x dev.sh
-            setsid nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 </dev/null &
-            echo "Dev server starting at $(date)"
+            docker compose up -d
+
+            # Wait for postgres to be ready
+            echo "Waiting for PostgreSQL..."
+            until docker compose exec -T postgres pg_isready -U plotbazaar -d plotbazaar -q 2>/dev/null; do sleep 1; done
+            echo "PostgreSQL ready."
+
+            # Ensure .env exists
+            [ -f .env ] || cp .env.example .env 2>/dev/null || touch .env
+            grep -q '^DATABASE_URL=' .env || echo 'DATABASE_URL="postgresql://plotbazaar:plotbazaar@localhost:5432/plotbazaar"' >> .env
+
+            # Install deps and run Prisma
+            npm install
+            npx prisma generate
+            npx prisma db push
+
+            # Start / restart app with PM2
+            pm2 stop plot-bazar 2>/dev/null || true
+            pm2 delete plot-bazar 2>/dev/null || true
+            pm2 start "npm run dev" --name plot-bazar
+            pm2 save
+
+            echo "Deployed successfully at $(date)"
