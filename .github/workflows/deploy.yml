@@ -29,19 +29,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
+          command_timeout: 5m
           script: |
             cd /home/ubuntu/plot-bazar
-            # Stop any existing Next.js dev server
             pkill -f "next dev" 2>/dev/null || true
-            # Stop existing Docker containers
             docker compose down 2>/dev/null || true
-            # Ensure dev.sh is executable
             chmod +x dev.sh
-            # Start dev.sh in background (it blocks on npm run dev)
-            nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 &
-            echo "Dev server starting with PID $!"
-            # Give it a few seconds to initialise
-            sleep 8
-            echo "--- Recent logs ---"
-            tail -30 /home/ubuntu/plot-bazar/dev.log
+            nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 </dev/null &
+            disown
+            echo "Dev server starting, PID $!"
+            sleep 10
+            tail -20 /home/ubuntu/plot-bazar/dev.log || true
             echo "Deployed successfully at $(date)"
