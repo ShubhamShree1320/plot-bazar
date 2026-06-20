@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Search, X, SlidersHorizontal, MapPin } from "lucide-react";
 import PlotCard from "@/components/plots/PlotCard";
@@ -40,7 +40,10 @@ export default function ExploreMapClient() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [cityQuery, setCityQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -83,6 +86,15 @@ export default function ExploreMapClient() {
       })
       .finally(() => setLoading(false));
   }, [buildParams, page, sortBy]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const card = cardRefs.current[selectedId];
+    const sidebar = sidebarRef.current;
+    if (card && sidebar) {
+      sidebar.scrollTo({ top: card.offsetTop - 12, behavior: "smooth" });
+    }
+  }, [selectedId]);
 
   function clearFilters() {
     setCityQuery("");
@@ -199,7 +211,9 @@ export default function ExploreMapClient() {
             center={[20.5937, 78.9629]}
             zoom={5}
             onPlotHover={setHoveredId}
+            onPlotClick={setSelectedId}
             hoveredId={hoveredId}
+            selectedId={selectedId}
           />
           <div className="absolute bottom-5 left-3 bg-white/90 backdrop-blur-sm rounded-xl shadow px-3 py-1.5 text-xs font-medium text-gray-600 flex items-center gap-1.5 z-[1000]">
             <MapPin className="w-3.5 h-3.5 text-blue-600" />
@@ -209,7 +223,7 @@ export default function ExploreMapClient() {
 
         {/* Sidebar */}
         <div className="w-96 flex flex-col border-l border-gray-200 bg-gray-50 shrink-0">
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div ref={sidebarRef} className="flex-1 overflow-y-auto p-3 space-y-3">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-xl animate-pulse">
@@ -238,10 +252,15 @@ export default function ExploreMapClient() {
               listPlots.map((plot) => (
                 <div
                   key={plot.id}
+                  ref={(el) => { cardRefs.current[plot.id] = el; }}
                   onMouseEnter={() => setHoveredId(plot.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   className={`rounded-2xl transition-all ${
-                    hoveredId === plot.id ? "ring-2 ring-blue-500" : ""
+                    selectedId === plot.id
+                      ? "ring-2 ring-amber-400 shadow-lg"
+                      : hoveredId === plot.id
+                      ? "ring-2 ring-blue-500"
+                      : ""
                   }`}
                 >
                   <PlotCard

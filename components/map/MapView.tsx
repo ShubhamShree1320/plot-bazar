@@ -18,10 +18,12 @@ interface MapViewProps {
   center?: [number, number];
   zoom?: number;
   onPlotHover?: (id: string | null) => void;
+  onPlotClick?: (id: string) => void;
   hoveredId?: string | null;
+  selectedId?: string | null;
 }
 
-export default function MapView({ plots, center, zoom = 10, onPlotHover, hoveredId }: MapViewProps) {
+export default function MapView({ plots, center, zoom = 10, onPlotHover, onPlotClick, hoveredId, selectedId }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,20 +73,23 @@ export default function MapView({ plots, center, zoom = 10, onPlotHover, hovered
       plots.forEach((plot) => {
         if (!plot.latitude || !plot.longitude) return;
 
+        const isSelected = selectedId === plot.id;
         const isHovered = hoveredId === plot.id;
+        const isActive = isSelected || isHovered;
         const icon = L.divIcon({
           html: `<div style="
-            background: ${isHovered ? "#1d4ed8" : "#2563eb"};
+            background: ${isSelected ? "#1e3a8a" : isHovered ? "#1d4ed8" : "#2563eb"};
             color: white;
-            padding: 4px 8px;
+            padding: ${isActive ? "5px 10px" : "4px 8px"};
             border-radius: 999px;
-            font-size: 11px;
+            font-size: ${isActive ? "12px" : "11px"};
             font-weight: 700;
-            border: 2px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: ${isSelected ? "3px solid #fbbf24" : "2px solid white"};
+            box-shadow: ${isSelected ? "0 0 0 2px #1e3a8a, 0 4px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.3)"};
             white-space: nowrap;
-            transform: ${isHovered ? "scale(1.1)" : "scale(1)"};
-            transition: transform 0.2s;
+            transform: ${isActive ? "scale(1.15)" : "scale(1)"};
+            transition: all 0.15s;
+            z-index: ${isSelected ? 1000 : 1};
           ">₹${(plot.price / 100000).toFixed(1)}L</div>`,
           className: "",
           iconAnchor: [0, 0],
@@ -103,11 +108,12 @@ export default function MapView({ plots, center, zoom = 10, onPlotHover, hovered
 
         marker.on("mouseover", () => onPlotHover?.(plot.id));
         marker.on("mouseout", () => onPlotHover?.(null));
+        marker.on("click", () => onPlotClick?.(plot.id));
 
         leafletRef.current.markers.push(marker);
       });
     });
-  }, [plots, mapLoaded, hoveredId]);
+  }, [plots, mapLoaded, hoveredId, selectedId, onPlotHover, onPlotClick]);
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden">
