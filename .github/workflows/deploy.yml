@@ -19,7 +19,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
-          source: ".,!.git,!.venv,!__pycache__,!*.pyc"
+          timeout: 60s
+          command_timeout: 10m
+          source: ".,!.git,!.venv,!__pycache__,!*.pyc,!node_modules"
           target: /home/ubuntu/plot-bazar
 
       - name: SSH to EC2 and deploy
@@ -29,15 +31,12 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
-          command_timeout: 5m
+          timeout: 60s
+          command_timeout: 10m
           script: |
             cd /home/ubuntu/plot-bazar
             pkill -f "next dev" 2>/dev/null || true
-            docker compose down 2>/dev/null || true
+            timeout 30 docker compose down 2>/dev/null || true
             chmod +x dev.sh
-            nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 </dev/null &
-            disown
-            echo "Dev server starting, PID $!"
-            sleep 10
-            tail -20 /home/ubuntu/plot-bazar/dev.log || true
-            echo "Deployed successfully at $(date)"
+            setsid nohup bash dev.sh > /home/ubuntu/plot-bazar/dev.log 2>&1 </dev/null &
+            echo "Dev server starting at $(date)"
