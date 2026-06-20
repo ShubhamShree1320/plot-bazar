@@ -111,6 +111,33 @@ export default async function HomePage() {
         )}
       </section>
 
+      {/* Explore Map CTA */}
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 py-14">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="text-white max-w-lg">
+            <h2 className="text-3xl font-bold mb-3">Search land anywhere</h2>
+            <p className="text-blue-100 leading-relaxed">
+              Explore current land prices, promising investment opportunities, and verified
+              property insights across every state in India — all on one interactive map.
+            </p>
+            <Link
+              href="/map"
+              className="inline-flex items-center gap-2 mt-6 bg-white text-blue-700 font-semibold px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors"
+            >
+              <MapPin className="w-4 h-4" />
+              Explore Map
+            </Link>
+          </div>
+          <div className="hidden md:flex items-center justify-center w-72 h-48 bg-white/10 rounded-2xl border border-white/20">
+            <div className="text-center text-white/70">
+              <MapPin className="w-16 h-16 mx-auto mb-2 text-white/50" />
+              <p className="text-sm font-medium text-white">{stats.totalPlots.toLocaleString()}+ plots mapped</p>
+              <p className="text-xs text-blue-200 mt-1">{stats.totalCities}+ cities covered</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Why Us */}
       <section className="bg-white py-16 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4">

@@ -47,6 +47,9 @@ export default function Navbar() {
             <Link href="/search" className="text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors">
               Browse Plots
             </Link>
+            <Link href="/map" className="text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors">
+              Explore Map
+            </Link>
             {user && (
               <Link href="/plots/new" className="text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors">
                 List Plot
@@ -114,6 +117,9 @@ export default function Navbar() {
           <div className="md:hidden border-t border-gray-100 py-3 space-y-1">
             <Link href="/search" className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-lg">
               Browse Plots
+            </Link>
+            <Link href="/map" className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-lg">
+              Explore Map
             </Link>
             {user && (
               <Link href="/plots/new" className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-lg">
