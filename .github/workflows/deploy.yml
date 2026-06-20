@@ -15,7 +15,7 @@ jobs:
       - name: Copy files to EC2
         uses: appleboy/scp-action@master
         with:
-          host: 54.198.195.135
+          host: 54.208.40.170
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
