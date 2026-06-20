@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["54.208.40.170"],
+  transpilePackages: ["mapbox-gl", "react-map-gl"],
   images: {
     remotePatterns: [
       {
